@@ -49,17 +49,24 @@ app.get('/api/v1/status', async (req, res) => {
   let statusTopic = topicPrefix + locationName + '/status'
   let pubTopic = topicPrefix + locationName + '/cmd'
 
-  client.on('connect', () => {
+  try {
+    client.on('connect', () => {
 
-    client.subscribe(statusTopic)
-    client.publish(pubTopic, JSON.stringify({ name: req.query.name, STATUS: 1 }))
-  })
+      client.subscribe(statusTopic)
+      client.publish(pubTopic, JSON.stringify({ name: req.query.name, STATUS: 1 }))
+    })
 
-  client.on('message', (topic, message) => {
+    client.on('message', (topic, message) => {
 
-    res.status(200).send(JSON.parse(message))
-    client.end()
-  })
+      res.status(200).send(JSON.parse(message))
+      client.end()
+    })
+  }
+
+  catch (err) {
+    console.log(err.message)
+  }
+
 })
 
 app.get('/api/v1/network', async (req, res) => {
@@ -69,17 +76,23 @@ app.get('/api/v1/network', async (req, res) => {
   let statusTopic = topicPrefix + locationName + '/status'
   let pubTopic = topicPrefix + locationName + '/cmd'
 
-  client.on('connect', () => {
+  try {
+    client.on('connect', () => {
 
-    client.subscribe(statusTopic)
-    client.publish(pubTopic, JSON.stringify({ name: req.query.name, NETWORK: 1 }))
-  })
+      client.subscribe(statusTopic)
+      client.publish(pubTopic, JSON.stringify({ name: req.query.name, NETWORK: 1 }))
+    })
 
-  client.on('message', (topic, message) => {
+    client.on('message', (topic, message) => {
 
-    res.status(200).send(JSON.parse(message))
-    client.end()
-  })
+      res.status(200).send(JSON.parse(message))
+      client.end()
+    })
+  }
+
+  catch (err) {
+    console.log(err.message)
+  }
 })
 
 app.post('/api/v1/reset', async (req, res) => {
@@ -88,16 +101,22 @@ app.post('/api/v1/reset', async (req, res) => {
   let locationName = req.query.location
   let pubTopic = topicPrefix + locationName + '/cmd'
 
-  client.on('connect', () => {
+  try {
+    client.on('connect', () => {
 
-    client.publish(pubTopic, JSON.stringify({ name: req.query.name, RESET: 1 }))
+      client.publish(pubTopic, JSON.stringify({ name: req.query.name, RESET: 1 }))
 
-    sleep(1000)
-    res.send('ok')
+      sleep(1000)
+      res.send('ok')
 
-    client.end()
+      client.end()
 
-  })
+    })
+  }
+
+  catch (err) {
+    console.log(err.message)
+  }
 })
 
 app.post('/api/v1/cmd', async (req, res) => {
@@ -110,14 +129,20 @@ app.post('/api/v1/cmd', async (req, res) => {
   let cmds = req.body
   cmds.name = req.query.name
 
-  client.on('connect', () => {
-    client.subscribe(subTopic)
+  try {
+    client.on('connect', () => {
+      client.subscribe(subTopic)
 
-    client.publish(pubTopic, JSON.stringify(cmds))
-    
-    res.send('ok')
-    client.end()
-  })
+      client.publish(pubTopic, JSON.stringify(cmds))
+
+      res.send('ok')
+      client.end()
+    })
+  }
+
+  catch (err) {
+    console.log(err.message)
+  }
 })
 
 
