@@ -5,9 +5,6 @@ var app = express();
 const basicAuth = require("./auth/basicAuth")
 const errorHandler = require("./auth/errorHandler");
 
-var mqttApi= require('./mqtt/mqttRoute')
-var userApi= require('./users/userController')
-
 app.use(express.json({ limit: "300kb" }));
 app.use(
   express.urlencoded({
@@ -39,27 +36,11 @@ app.use(methodOverride("_method"));
 
 require("dotenv").config();
 
-// Set up mongoose connection
-var mongoose = require('mongoose');
-const mongoURI = `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOSTNAME}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}`;
-
-mongoose
-  .connect(mongoURI, {
-    useUnifiedTopology: true,
-    useNewUrlParser: true,
-    useFindAndModify: false,
-  })
-  .then(() => console.log(`${process.env.MONGO_DB} connected`));
-mongoose.Promise = global.Promise;
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-
-
-app.use('/api/v1/mqtt', mqttApi)
-app.use('/api/v1/users', userApi)
+app.use('/api/v1/mqtt', require('./mqtt/mqttRoute'))
 
 app.get('/api/v1', (req, res)=>{
-  res.send('sbase api.')
+  // to check if API is working
+  res.send('This is Sbase API.')
 })
 
 app.listen(process.env.PORT, () => {

@@ -10,16 +10,35 @@ var options = {
 var topicPrefix = `/sbase/`
 
 function checkIsQueryValid(podName, location) {
-  if (podName != null && location != null){
+  if (podName != null && location != null) {
     let nameSubStr = podName.substring(0, 3)
     let podNumber = podName.substring(3, podName.length + 1)
 
     if (nameSubStr == 'pod' && parseInt(podNumber) >= 1 && parseInt(podNumber) <= 16) return true
-    
+
     else return false
   }
 
   else return false
+}
+
+function publishEvent(podName, locationName){
+  var mqttClient = mqtt.connect(`mqtt://${process.env.HOST}`, options)
+
+  let eventTopic= topicPrefix+locationName+'/event'
+
+  let errorMsg = {
+    name: podName,
+    events: 1,
+    level: 4,
+    type: "HTTP",
+    status: '',
+    msg: "Unexpected API query"
+  }
+  mqttClient.on('connect', () => {
+    mqttClient.publish(eventTopic, JSON.stringify(errorMsg))
+    mqttClient.end()
+  })
 }
 
 
@@ -30,17 +49,16 @@ exports.sendHardwareCommand = async (req, res) => {
   const podName = req.query.name
 
   let cmdTopic = topicPrefix + locationName + '/cmd'
-  // let subTopic = topicPrefix + locationName + '/status'
-
-  let cmds = req.body
-  cmds.name = podName
+  
+  let commands = req.body
+  commands.name = podName
 
   try {
     let isValid = checkIsQueryValid(podName, locationName)
 
     if (isValid == true) {
       mqttClient.on('connect', () => {
-        mqttClient.publish(cmdTopic, JSON.stringify(cmds))
+        mqttClient.publish(cmdTopic, JSON.stringify(commands))
 
         res.status(200).send(`Command sent.`)
         mqttClient.end()
@@ -48,8 +66,19 @@ exports.sendHardwareCommand = async (req, res) => {
     }
 
     else {
-      res.send('wrong query')
+      publishEvent(podName, locationName)
+      res.status(400).send('Unexpected query. Please check the pod name and location.')
     }
+
+    req.on("close", function () {
+      // console.log('req.close is here')
+      mqttClient.end();
+    });
+
+    req.on("end", function () {
+      // console.log('req.end is here')
+      mqttClient.end();
+    });
   }
 
   catch (err) {
@@ -64,7 +93,6 @@ exports.getPodStatus = async (req, res) => {
 
   let statusTopic = topicPrefix + locationName + '/status'
   let cmdTopic = topicPrefix + locationName + '/cmd'
-  let eventTopic = topicPrefix + locationName + '/event'
 
   try {
     let isValid = checkIsQueryValid(podName, locationName)
@@ -78,37 +106,26 @@ exports.getPodStatus = async (req, res) => {
       mqttClient.on('message', (topic, message) => {
         let encodedMsg = JSON.parse(message)
         if (topic == statusTopic && encodedMsg.name == podName, encodedMsg.type == 'status') {
-          // console.log(JSON.parse(message))
           res.status(200).send(JSON.parse(message))
         }
 
       })
-
-      req.on("close", function () {
-        // console.log('req.close is here')
-        mqttClient.end();
-      });
-
-      req.on("end", function () {
-        // console.log('req.end is here')
-        mqttClient.end();
-      });
     }
 
     else {
-      let errorMsg = {
-        name: podName,
-        events: 1,
-        level: 4,
-        type: "HTTP",
-        status: '',
-        msg: "Unexpected API query"
-      }
-      mqttClient.on('connect', () => {
-        mqttClient.publish(eventTopic, JSON.stringify(errorMsg))
-      })
+      publishEvent(podName, locationName)
       res.status(400).send('Unexpected query. Please check the pod name and location.')
     }
+
+    req.on("close", function () {
+      // console.log('req.close is here')
+      mqttClient.end();
+    });
+
+    req.on("end", function () {
+      // console.log('req.end is here')
+      mqttClient.end();
+    });
   }
 
   catch (err) {
@@ -122,7 +139,7 @@ exports.getPodNetworkInfo = async (req, res) => {
   const locationName = req.query.location
   const podName = req.query.name
 
-  let statusTopic = topicPrefix + locationName + '/status'
+  let statusTopic = topicPrefix + locationName + '/status' //network info is on status too
   let cmdTopic = topicPrefix + locationName + '/cmd'
 
   try {
@@ -136,35 +153,28 @@ exports.getPodNetworkInfo = async (req, res) => {
       })
 
       mqttClient.on('message', (topic, message) => {
+        let encodedMsg = JSON.parse(message)
+        if (topic == statusTopic && encodedMsg.name == podName, encodedMsg.type == 'network') {
+          res.status(200).send(JSON.parse(message))
+        }
 
-        res.status(200).send(JSON.parse(message))
       })
-
-      req.on("close", function () {
-        // console.log('req.close is here')
-        mqttClient.end();
-      });
-
-      req.on("end", function () {
-        // console.log('req.end is here')
-        mqttClient.end();
-      });
     }
 
     else {
-      let errorMsg = {
-        name: podName,
-        events: 1,
-        level: 4,
-        type: "HTTP",
-        status: '',
-        msg: "Unexpected API query"
-      }
-      mqttClient.on('connect', () => {
-        mqttClient.publish(eventTopic, JSON.stringify(errorMsg))
-      })
+      publishEvent(podName, locationName)
       res.status(400).send('Unexpected query. Please check the pod name and location.')
     }
+
+    req.on("close", function () {
+      console.log('ok close')
+      mqttClient.end();
+    });
+
+    req.on("end", function () {
+      console.log('ok end')
+      mqttClient.end();
+    });
   }
 
   catch (err) {
@@ -181,16 +191,31 @@ exports.resetPod = async (req, res) => {
   let cmdTopic = topicPrefix + locationName + '/cmd'
 
   try {
-    mqttClient.on('connect', () => {
+    let isValid = checkIsQueryValid(podName, locationName)
 
-      mqttClient.publish(cmdTopic, JSON.stringify({ name: podName, RESET: 1 }))
+    if (isValid == true) {
+      mqttClient.on('connect', () => {
 
-      // sleep(3500)
-      res.status(200).send(`Command sent.`)
+        mqttClient.publish(cmdTopic, JSON.stringify({ name: podName, RESET: 1 }))
 
-      mqttClient.end()
+        res.status(200).send(`Command sent.`)
 
-    })
+        mqttClient.end()
+      })
+    }
+
+    else {
+      publishEvent(podName, locationName)
+      res.status(400).send('Unexpected query. Please check the pod name and location.')
+    }
+
+    req.on("close", function () {
+      mqttClient.end();
+    });
+
+    req.on("end", function () {
+      mqttClient.end();
+    });
   }
 
   catch (err) {
