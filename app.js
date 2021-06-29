@@ -1,7 +1,6 @@
 var express = require('express')
 const methodOverride = require("method-override");
 var app = express();
-// var sleep = require('system-sleep');
 const basicAuth = require("./auth/basicAuth")
 const errorHandler = require("./auth/errorHandler");
 

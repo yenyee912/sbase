@@ -1,6 +1,5 @@
 var mqtt = require('mqtt');
 var options = {
-  // mqttClientId: "mqttjs_e9cf61b2",
   // username:"",
   // password:"",
   clean: true
@@ -50,8 +49,11 @@ exports.sendHardwareCommand = async (req, res) => {
 
   let cmdTopic = topicPrefix + locationName + '/cmd'
   
-  let commands = req.body
+  let commands = req.query
   commands.name = podName
+
+  delete commands.location
+  delete commands.name
 
   try {
     let isValid = checkIsQueryValid(podName, locationName)
