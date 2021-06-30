@@ -12,8 +12,8 @@ router.get('/status', timeout('5s'), haltOnTimedout, controller.getPodStatus)
 
 router.get('/network', timeout('5s'), haltOnTimedout, controller.getPodNetworkInfo)
 
-router.post('/cmd', controller.sendHardwareCommand)
+router.get('/cmd', controller.sendHardwareCommand)
 
-router.post('/reset', controller.resetPod)
+router.get('/reset', controller.resetPod)
 
 module.exports= router
