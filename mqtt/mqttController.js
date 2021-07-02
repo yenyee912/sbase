@@ -53,7 +53,6 @@ exports.sendHardwareCommand = async (req, res) => {
   commands.name = podName
 
   delete commands.location
-  delete commands.name
 
   try {
     let isValid = checkIsQueryValid(podName, locationName)
