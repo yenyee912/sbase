@@ -49,8 +49,13 @@ exports.sendHardwareCommand = async (req, res) => {
 
   let cmdTopic = topicPrefix + locationName + '/cmd'
   
-  let commands = req.query
-  commands.name = podName
+  let commands = req.query  
+  
+  for(key in commands){
+    if(key!='name'){
+      commands[key]= parseInt(commands[key])
+    }
+  }
 
   delete commands.location
 
