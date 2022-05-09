@@ -21,11 +21,11 @@ var corsMiddleware = function (req, res, next) {
     "Access-Control-Allow-Methods",
     "OPTIONS, GET, PUT, PATCH, POST, DELETE"
   );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, X-Requested-With, Authorization"
-  );
-  res.setHeader("Access-Control-Allow-Credentials", true);
+  // res.setHeader(
+  //   "Access-Control-Allow-Headers",
+  //   "Content-Type, X-Requested-With, Authorization"
+  // );
+  // res.setHeader("Access-Control-Allow-Credentials", true);
   if ("OPTIONS" == req.method) {
     res.sendStatus(200);
   } else next();
