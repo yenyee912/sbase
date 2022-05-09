@@ -2,7 +2,7 @@ var express = require('express')
 const methodOverride = require("method-override");
 var app = express();
 // const basicAuth = require("./auth/basicAuth")
-const errorHandler = require("./auth/errorHandler");
+// const errorHandler = require("./auth/errorHandler");
 
 app.use(express.json({ limit: "300kb" }));
 app.use(
@@ -12,7 +12,7 @@ app.use(
 );
 
 // app.use(basicAuth)
-app.use(errorHandler)
+// app.use(errorHandler)
 
 // CORS
 var corsMiddleware = function (req, res, next) {
